@@ -10,6 +10,7 @@ export default function App() {
         <a
           href="https://github.com/stugceates/sc-react-project"
           target="_blank"
+          rel="noreferrer"
         >
           Github
         </a>
