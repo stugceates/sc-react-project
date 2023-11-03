@@ -1,6 +1,3 @@
-// Eslint was giving the error since the imported "react" is not used in the code
-//import react from "react";
-
 export default function FormattedDate(props) {
   let days = [
     "Monday",
