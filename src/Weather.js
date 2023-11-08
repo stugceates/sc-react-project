@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import "./Weather.css";
 import axios from "axios";
 import WeatherInfo from "./WeatherInfo";
+import WeatherForecast from "./WeatherForecast";
 
 export default function Weather(props) {
   const [weatherData, setWeatherData] = useState({ ready: false });
+  const [forecastData, setForecastData] = useState({ ready: false });
   const [city, setCity] = useState(props.defaultCity);
+  const apiKey = "fa2f0ab0044e0f6ed0fo3e30511f6tbc";
+
   function handleResponse(response) {
-    console.log(response.data);
     setWeatherData({
       ready: true,
       temperature: response.data.temperature.current,
@@ -18,9 +21,25 @@ export default function Weather(props) {
       description: response.data.condition.description,
       icon_url: `http://shecodes-assets.s3.amazonaws.com/api/weather/icons/${response.data.condition.icon}.png`,
     });
+
+    const lat = response.data.coordinates.latitude;
+    const lon = response.data.coordinates.longitude;
+
+    let forecastApiUrl = `https://api.shecodes.io/weather/v1/forecast?lat=${lat}&lon=${lon}&key=${apiKey}&units=metric`;
+    axios.get(forecastApiUrl).then(handleForecastResponse);
   }
+
+  function handleForecastResponse(response) {
+    setForecastData({
+      ready: true,
+      time: new Date(response.data.daily[1].time * 1000),
+      maximum: Math.round(response.data.daily[1].temperature.maximum),
+      minimum: Math.round(response.data.daily[1].temperature.minimum),
+      icon_url: `http://shecodes-assets.s3.amazonaws.com/api/weather/icons/${response.data.daily[0].condition.icon}.png`,
+    });
+  }
+
   function search() {
-    const apiKey = "fa2f0ab0044e0f6ed0fo3e30511f6tbc";
     let apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
     axios.get(apiUrl).then(handleResponse);
   }
@@ -57,6 +76,7 @@ export default function Weather(props) {
           </div>
         </form>
         <WeatherInfo data={weatherData} />
+        <WeatherForecast data={forecastData} />
       </div>
     );
   } else {
