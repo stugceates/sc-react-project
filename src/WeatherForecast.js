@@ -2,33 +2,50 @@ import React, { useState } from "react";
 import "./WeatherForecast.css";
 
 export default function WeatherForecast(props) {
-  function day() {
-    let day = props.data.time.getDay();
-    let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    return days[day];
+  let comp = null;
+  function day(time) {
+    if (time) {
+      let day = time.getDay();
+      let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      return days[day];
+    }
   }
-  let loaded = useState(false);
-  if (loaded) {
-    return (
-      <div className="WeatherForecast">
-        <div className="row">
-          <div className="col">
-            <div className="WeatherForecast-day">{day()}</div>
-            <img src={props.data.icon_url} alt=" " />
+  if (props.isLoaded) {
+    const forecastDailyData = props.data.map(function (forecast) {
+      const time = new Date(forecast.time * 1000);
+
+      return {
+        time: time,
+        maximum: Math.round(forecast.temperature.maximum),
+        minimum: Math.round(forecast.temperature.minimum),
+        icon_url: `http://shecodes-assets.s3.amazonaws.com/api/weather/icons/${forecast.condition.icon}.png`,
+        day: day(time),
+      };
+    });
+
+    comp = forecastDailyData.map(function (forecast, i) {
+      if (i < 5) {
+        return (
+          <div className="col" key={forecast.day}>
+            <div className="WeatherForecast-day">{forecast.day}</div>
+            <img src={forecast.icon_url} alt=" " />
             <div className="WeatherForecast-temperatures">
               <span className="WeatherForecast-temperature-max">
-                {props.data.maximum}
+                {forecast.maximum}
               </span>
               {" / "}
               <span className="WeatherForecast-temperature-min">
-                {props.data.minimum}
+                {forecast.minimum}
               </span>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  } else {
-    return null;
+        );
+      }
+    });
   }
+  return (
+    <div className="WeatherForecast">
+      <div className="row">{comp}</div>
+    </div>
+  );
 }

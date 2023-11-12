@@ -7,6 +7,7 @@ import WeatherForecast from "./WeatherForecast";
 export default function Weather(props) {
   const [weatherData, setWeatherData] = useState({ ready: false });
   const [forecastData, setForecastData] = useState({ ready: false });
+  const [loaded, setLoaded] = useState(false);
   const [city, setCity] = useState(props.defaultCity);
   const apiKey = "fa2f0ab0044e0f6ed0fo3e30511f6tbc";
 
@@ -30,13 +31,8 @@ export default function Weather(props) {
   }
 
   function handleForecastResponse(response) {
-    setForecastData({
-      ready: true,
-      time: new Date(response.data.daily[1].time * 1000),
-      maximum: Math.round(response.data.daily[1].temperature.maximum),
-      minimum: Math.round(response.data.daily[1].temperature.minimum),
-      icon_url: `http://shecodes-assets.s3.amazonaws.com/api/weather/icons/${response.data.daily[0].condition.icon}.png`,
-    });
+    setForecastData(response.data.daily);
+    setLoaded(true);
   }
 
   function search() {
@@ -76,7 +72,7 @@ export default function Weather(props) {
           </div>
         </form>
         <WeatherInfo data={weatherData} />
-        <WeatherForecast data={forecastData} />
+        <WeatherForecast data={forecastData} isLoaded={loaded} />
       </div>
     );
   } else {
