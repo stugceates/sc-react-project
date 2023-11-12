@@ -1,52 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Weather.css";
 import axios from "axios";
 import WeatherInfo from "./WeatherInfo";
 import WeatherForecast from "./WeatherForecast";
+
+const apiKey = "fa2f0ab0044e0f6ed0fo3e30511f6tbc";
+
+async function loadWeatherData(city) {
+  const apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
+  return axios.get(apiUrl);
+}
+
+async function loadForecastData(lat, lon) {
+  const forecastApiUrl = `https://api.shecodes.io/weather/v1/forecast?lat=${lat}&lon=${lon}&key=${apiKey}&units=metric`;
+  return axios.get(forecastApiUrl);
+}
 
 export default function Weather(props) {
   const [weatherData, setWeatherData] = useState({ ready: false });
   const [forecastData, setForecastData] = useState({ ready: false });
   const [loaded, setLoaded] = useState(false);
   const [city, setCity] = useState(props.defaultCity);
-  const apiKey = "fa2f0ab0044e0f6ed0fo3e30511f6tbc";
+  const [cityInput, setCityInput] = useState("");
 
-  function handleResponse(response) {
-    setWeatherData({
-      ready: true,
-      temperature: response.data.temperature.current,
-      wind: response.data.wind,
-      date: new Date(response.data.time * 1000),
-      humidity: response.data.temperature.humidity,
-      city: response.data.city,
-      description: response.data.condition.description,
-      icon_url: `http://shecodes-assets.s3.amazonaws.com/api/weather/icons/${response.data.condition.icon}.png`,
-    });
+  useEffect(() => {
+    const fetchData = async () => {
+      const weather = await loadWeatherData(city);
+      setWeatherData({
+        ready: true,
+        temperature: weather.data.temperature.current,
+        wind: weather.data.wind,
+        date: new Date(weather.data.time * 1000),
+        humidity: weather.data.temperature.humidity,
+        city: weather.data.city,
+        description: weather.data.condition.description,
+        icon_url: `http://shecodes-assets.s3.amazonaws.com/api/weather/icons/${weather.data.condition.icon}.png`,
+      });
 
-    const lat = response.data.coordinates.latitude;
-    const lon = response.data.coordinates.longitude;
-
-    let forecastApiUrl = `https://api.shecodes.io/weather/v1/forecast?lat=${lat}&lon=${lon}&key=${apiKey}&units=metric`;
-    axios.get(forecastApiUrl).then(handleForecastResponse);
-  }
-
-  function handleForecastResponse(response) {
-    setForecastData(response.data.daily);
-    setLoaded(true);
-  }
-
-  function search() {
-    let apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
-    axios.get(apiUrl).then(handleResponse);
-  }
+      const lat = weather.data.coordinates.latitude;
+      const lon = weather.data.coordinates.longitude;
+      const forecast = await loadForecastData(lat, lon);
+      setForecastData(forecast.data.daily);
+      setLoaded(true);
+    };
+    fetchData();
+  }, [city]);
 
   function handleSubmit(event) {
     event.preventDefault();
-    search();
+    setCity(cityInput);
   }
 
   function handleCityChange(event) {
-    setCity(event.target.value);
+    setCityInput(event.target.value);
   }
   if (weatherData.ready) {
     return (
@@ -76,7 +82,6 @@ export default function Weather(props) {
       </div>
     );
   } else {
-    search();
     return "Loading...";
   }
 }
